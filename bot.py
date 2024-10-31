@@ -2,6 +2,7 @@ import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import logging
+from random import randint
 from datetime import datetime
 
 logging.basicConfig(
@@ -24,11 +25,11 @@ class GambleBot:
         user = update.effective_user
         user_balances[user.id] = user_balances.get(user.id, 1000)  # Default starting balance
         welcome_message = (
-            f"👋 Welcome {user.mention_html()}!\n\n"
+            f" Welcome {user.mention_html()}!\n\n"
             "Available commands:\n"
             "/start - Show this welcome message\n"
             "/balance - Check your current balance\n"
-            "/bet [amount] - Place a bet\n"
+            "/bet [amount] - Place a bet on a coin flip (double or lose)\n"
         )
         await update.message.reply_html(welcome_message)
 
@@ -56,8 +57,20 @@ class GambleBot:
                 await update.message.reply_text("Insufficient balance!")
                 return
 
+            # Simulate coin flip (random number 1 or 2)
+            coin_flip = randint(1, 2)
+
+            if coin_flip == 1:  # Heads (win)
+                user_balances[user.id] += bet_amount
+                result_message = f"Heads! You win ${bet_amount}!"
+            else:  # Tails (lose)
+                user_balances[user.id] -= bet_amount
+                result_message = f"Tails! You lose ${bet_amount}."
+
             await update.message.reply_text(
                 f"Bet placed: ${bet_amount}\n"
+                f"{result_message}\n"
+                f"New balance: ${user_balances[user.id]}"
             )
 
         except ValueError:
